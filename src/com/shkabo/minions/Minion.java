@@ -36,6 +36,8 @@ public class Minion {
         }
 		// check collection name
 		this.getCollectionName( this.page );
+
+		//TODO: finish this part of the workflow !
 	}
 
 	/**
