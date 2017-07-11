@@ -21,11 +21,21 @@ public class Minion {
 	private String protocol;
 	private String collectionSize;
 	private ArrayList<String> collectionItems;
+	private String collectionName;
+	private String page;
 
 	// constructor and set url and port to work with
 	// @TODO: try catch if url is not set
 	public Minion(String url) {
 		this.url = url;
+		//first let's get our page!
+		this.readUrl();
+		if (this.page.isEmpty()) {
+            System.out.println("There was an error fetching the page ....");
+            System.exit(0);
+        }
+		// check collection name
+		this.getCollectionName( this.page );
 	}
 
 	/**
@@ -33,7 +43,7 @@ public class Minion {
 	 * 
 	 * @return String
 	 */
-	public String readUrl() {
+	private void readUrl() {
 
 		String result = null;
 		try {
@@ -56,75 +66,17 @@ public class Minion {
 			}
 			br.close();
 			result = sb.toString();
-
-		} catch (MalformedURLException e) {
-			System.err.println(e);
-		} catch (IOException e) {
+			this.page = result;
+		}  catch (IOException e) {
 			System.err.println(e);
 		}
-		return result;
-
 	}
-
-	/**
-	 * Parse html and get all a href tags and href values
-	 * 
-	 * @param html
-	 * @return String
-	 */
-	public void getLinks(String html) {
-		// parse html and make a list of links
-		Document doc = Jsoup.parse(html);
-		Elements links = doc.select("a[href]");
-		ArrayList<String> str = new ArrayList<>();
-
-		for (Element element : links) {
-			str.add(element.attr("href"));
-		}
-		// make a hash with unique values
-		Set<String> set = new HashSet<>();
-		for (String string : str) {
-			set.add(string);
-		}
-		
-		// dump sorted result to console
-		Iterator<String> it = set.stream().sorted().collect(Collectors.toList()).iterator();
-		while (it.hasNext()) {
-			String tmp = this.fixLink(it.next());
-			if (tmp.startsWith(this.protocol)) {
-				System.out.println(tmp);
-			}
-
-		}
-	}
-	/**
-	 * Change relative to absolute links
-	 * 
-	 * @param link String
-	 * @return String
-	 */
-	private String fixLink(String link) {
-		
-		if (link.startsWith("/")) {
-			return this.url + link;
-		} else if (link.startsWith("#")) {
-			return this.url +  "/" + link; 
-		} else if (link.startsWith("//")) {
-			return this.protocol + ":" +link;
-		} else {
-			return link;
-		}
-	}
-	
-	// TODO: proveriti zasto twitch nece da parsuje kako treba !
-	// 10.07.2017. Treba ti phantomjs konje :)
 
     /**
      * Get collection size
      * @param html
-     * @return
      */
-	public String getCollection(String html) {
+	private void getCollection(String html) {
 		Document doc = Jsoup.parse(html);
 		Elements collection_num = doc.select(".col-xs-12 .panel h2.panel-title");
         String size = "";
@@ -132,9 +84,23 @@ public class Minion {
 
             size = elem.childNode(0).toString().split(" ")[0];
         }
-        this.collectionSize = size;
-        return size;
+		System.out.println("This collection has: " + size + " items.");
+		this.collectionSize = size;
 	}
 
+    /**
+     * Get collection name for future references
+     * @param html
+     */
+	private void getCollectionName(String html) {
+		Document doc = Jsoup.parse(html);
+		Elements collection = doc.select("li > strong");
+		String name = "";
+		for (Element elem : collection) {
+			name = elem.childNode(0).toString().trim().replace("«","").replace("»","");
+		}
+		System.out.println("Collection name: " + name);
+		this.collectionName = name;
+	}
 
 }
