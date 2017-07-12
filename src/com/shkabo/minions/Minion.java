@@ -19,15 +19,14 @@ public class Minion {
 
 	private String url;
 	private String protocol;
-	private Integer collectionSize;
-	private ArrayList<String> collectionItems = new ArrayList<>();
+	private Integer collectionSize = 0;
+	private List<String> collectionItems = new ArrayList<>();
 	private String collectionName;
 	private String page;
-	private int numPages;
+	private int numPages = 0;
 	private ArrayList<String> collectionPages = new ArrayList<>();
 
 	// constructor and set url and port to work with
-	// @TODO: try catch if url is not set
 	public Minion(String url) {
 		this.url = url;
 		//first let's get our page!
@@ -46,12 +45,31 @@ public class Minion {
             System.out.println("There are no items in this collection. Sorry :(");
             System.exit(0);
         }
+
+        // collect items from the page
+        this.getCollectionItems( this.page );
+
         // check if collection has more pages ?
         this.getCollectionPages( this.page );
 
+        // if we have more pages let's check items on them !
+        if (this.numPages > 0) {
+            // get only unique items from the list !
+            Set<String> uniqPages = new HashSet<String>(this.collectionPages);
 
-        // get collection items so we can later process them
-        this.getCollectionItems( this.page );
+            for (String s : uniqPages) {
+                this.url = "http://newwalls.as-creation.com" + s;
+                this.readUrl();
+                this.getCollectionSize( this.page );
+                this.getCollectionItems( this.page );
+            }
+
+        } else {
+            // get collection items so we can later process them
+            this.getCollectionItems( this.page );
+        }
+
+        System.out.println("no items: "+this.collectionSize);
 
         //TODO: finish this part of the workflow !
 	}
@@ -66,7 +84,7 @@ public class Minion {
 		String result = null;
 		try {
 			
-			URLConnection address = new URL(this.url).openConnection();
+			URLConnection address = new URL( this.url ).openConnection();
 			address.setRequestProperty("User-Agent",
 					"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
 			// set protocol
@@ -103,7 +121,7 @@ public class Minion {
             size = elem.childNode(0).toString().split(" ")[0];
         }
 		System.out.println("This collection has: " + size + " items.");
-		this.collectionSize = Integer.parseInt(size);
+		this.collectionSize += Integer.parseInt(size);
 	}
 
     /**
@@ -131,6 +149,7 @@ public class Minion {
 		for (Element item : items) {
             this.collectionItems.add(item.toString());
         }
+        System.out.println("Items size: "+this.collectionItems.size());
     }
 
     /**
@@ -139,9 +158,11 @@ public class Minion {
      */
     private void getCollectionPages(String html) {
 	    Document doc = Jsoup.parse(html);
-	    Elements pages = doc.select("ul.pagination > li");
+	    Elements pages = doc.select("ul.pagination > li > a[href]");
         this.numPages = pages.size();
-        System.out.println("number of pages: " + this.numPages);
+        for (Element page : pages) {
+            this.collectionPages.add(page.attr("href"));
+        }
     }
 
 
