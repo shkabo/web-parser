@@ -6,7 +6,8 @@ public class Scrapper {
 
 	public static void main(String[] args) {
 		Minion edd = new Minion("http://newwalls.as-creation.com/en/collections/376500.html");
-		System.out.println("Request sent! Fetching URL\n\r");
-
+		//System.out.println("Request sent! Fetching URL\n\r");
+		//http://newwalls.as-creation.com/en/collections/376500.html rust
+		//http://newwalls.as-creation.com/en/collections/370700.html kind of white
 	}
 }

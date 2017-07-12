@@ -20,9 +20,11 @@ public class Minion {
 	private String url;
 	private String protocol;
 	private Integer collectionSize;
-	private ArrayList<String> collectionItems;
+	private ArrayList<String> collectionItems = new ArrayList<>();
 	private String collectionName;
 	private String page;
+	private int numPages;
+	private ArrayList<String> collectionPages = new ArrayList<>();
 
 	// constructor and set url and port to work with
 	// @TODO: try catch if url is not set
@@ -44,8 +46,14 @@ public class Minion {
             System.out.println("There are no items in this collection. Sorry :(");
             System.exit(0);
         }
+        // check if collection has more pages ?
+        this.getCollectionPages( this.page );
 
-		//TODO: finish this part of the workflow !
+
+        // get collection items so we can later process them
+        this.getCollectionItems( this.page );
+
+        //TODO: finish this part of the workflow !
 	}
 
 	/**
@@ -113,12 +121,29 @@ public class Minion {
 		this.collectionName = name;
 	}
 
+    /**
+     * Get collection items
+     * @param html
+     */
 	private void getCollectionItems(String html) {
 	    Document doc = Jsoup.parse(html);
-	    Elements items = doc.select(".col-xs-4 .col-sm-3 > a.thumbnail");
-	    for (Element item : items) {
-            System.out.println(item);
+	    Elements items = doc.select("div.col-xs-4.col-sm-3 > a.thumbnail[title]");
+		for (Element item : items) {
+            this.collectionItems.add(item.toString());
         }
     }
+
+    /**
+     * Check if we have multiple pages for our collection
+     * @param html
+     */
+    private void getCollectionPages(String html) {
+	    Document doc = Jsoup.parse(html);
+	    Elements pages = doc.select("ul.pagination > li");
+        this.numPages = pages.size();
+        System.out.println("number of pages: " + this.numPages);
+    }
+
+
 
 }
