@@ -19,7 +19,7 @@ public class Minion {
 
 	private String url;
 	private String protocol;
-	private String collectionSize;
+	private Integer collectionSize;
 	private ArrayList<String> collectionItems;
 	private String collectionName;
 	private String page;
@@ -36,6 +36,14 @@ public class Minion {
         }
 		// check collection name
 		this.getCollectionName( this.page );
+
+		// check number of items in collection
+        this.getCollectionSize( this.page );
+
+        if (this.collectionSize == 0 ) {
+            System.out.println("There are no items in this collection. Sorry :(");
+            System.exit(0);
+        }
 
 		//TODO: finish this part of the workflow !
 	}
@@ -78,7 +86,7 @@ public class Minion {
      * Get collection size
      * @param html
      */
-	private void getCollection(String html) {
+	private void getCollectionSize(String html) {
 		Document doc = Jsoup.parse(html);
 		Elements collection_num = doc.select(".col-xs-12 .panel h2.panel-title");
         String size = "";
@@ -87,7 +95,7 @@ public class Minion {
             size = elem.childNode(0).toString().split(" ")[0];
         }
 		System.out.println("This collection has: " + size + " items.");
-		this.collectionSize = size;
+		this.collectionSize = Integer.parseInt(size);
 	}
 
     /**
@@ -104,5 +112,13 @@ public class Minion {
 		System.out.println("Collection name: " + name);
 		this.collectionName = name;
 	}
+
+	private void getCollectionItems(String html) {
+	    Document doc = Jsoup.parse(html);
+	    Elements items = doc.select(".col-xs-4 .col-sm-3 > a.thumbnail");
+	    for (Element item : items) {
+            System.out.println(item);
+        }
+    }
 
 }
