@@ -20,7 +20,7 @@ public class Minion {
 	private String url;
 	private String protocol;
 	private Integer collectionSize = 0;
-	private List<String> collectionItems = new ArrayList<>();
+	private List<TapetItem> collectionItems = new ArrayList<>();
 	private String collectionName;
 	private String page;
 	private int numPages = 0;
@@ -70,7 +70,13 @@ public class Minion {
         }
 
         System.out.println("no items: "+this.collectionSize);
+        System.out.println("items: " + this.collectionItems.size());
+        // now that we have everything
+		// wee need to collect each set
 
+		// make new folder with their name and id
+		// download images in it
+		// optional resize those images
         //TODO: finish this part of the workflow !
 	}
 
@@ -120,7 +126,6 @@ public class Minion {
 
             size = elem.childNode(0).toString().split(" ")[0];
         }
-		System.out.println("This collection has: " + size + " items.");
 		this.collectionSize += Integer.parseInt(size);
 	}
 
@@ -135,7 +140,6 @@ public class Minion {
 		for (Element elem : collection) {
 			name = elem.childNode(0).toString().trim().replace("«","").replace("»","");
 		}
-		System.out.println("Collection name: " + name);
 		this.collectionName = name;
 	}
 
@@ -147,9 +151,11 @@ public class Minion {
 	    Document doc = Jsoup.parse(html);
 	    Elements items = doc.select("div.col-xs-4.col-sm-3 > a.thumbnail[title]");
 		for (Element item : items) {
-            this.collectionItems.add(item.toString());
-        }
-        System.out.println("Items size: "+this.collectionItems.size());
+		    TapetItem tapet = new TapetItem();
+		    tapet.title = item.attr("title");
+		    tapet.link = item.attr("href");
+            this.collectionItems.add(tapet);
+		}
     }
 
     /**
