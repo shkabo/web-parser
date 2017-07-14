@@ -1,19 +1,23 @@
 package com.shkabo.minions;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.awt.*;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import javax.imageio.ImageIO;
 
 public class Minion {
 
@@ -73,6 +77,33 @@ public class Minion {
         System.out.println("items: " + this.collectionItems.size());
         // now that we have everything
 		// wee need to collect each set
+        // but first let's create a folder of this collection !
+        try {
+            new File( this.collectionName ).mkdirs();
+        } catch (SecurityException se) {
+            System.out.println("An error occured while creating collection directory: " + se.getMessage());
+        }
+
+        // now we visit each item, create it's folder, download images !
+        // main image should be 900x720
+        // other images should be width 900px, height corresponding to width
+        for ( TapetItem item : this.collectionItems ) {
+            System.out.println("Getting item: " + item.title );
+
+            try {
+               new File( this.collectionName + File.separator + item.title ).mkdirs();
+            } catch (SecurityException se) {
+                System.out.println("An error occured while creating collection item directory: " + se.getMessage());
+            }
+            // check url !
+            this.url = "http://newwalls.as-creation.com" + item.link;
+            System.out.println(this.url);
+            this.readUrl();
+           //System.out.println(Paths.get(this.collectionName + File.separator + item.title));
+            // let's get items
+            this.getItemImages( this.page, this.collectionName + File.separator + item.title, item.title);
+        }
+
 
 		// make new folder with their name and id
 		// download images in it
@@ -171,6 +202,26 @@ public class Minion {
         }
     }
 
+    private void getItemImages(String html, String path, String filename) {
+        Document doc = Jsoup.parse(html);
+        Elements images = doc.select("div.thumbBarInner > a[href]");
+        int i = 0;
+        for (Element image : images) {
+            System.out.println("processing  image: " + i);
+            i++;
+            this.saveImage(image.attr("href"), path, filename + " ("+i+").jpg");
+        }
+    }
 
+    private void saveImage( String url, String path, String filename) {
+        try {
+            InputStream in = new URL( "http:"+url ).openStream();
+            Files.copy(in, Paths.get(path + File.separator + filename));
+        } catch (MalformedURLException ex) {
+            System.out.println("Couldn't download image. Wrong or bad url: " + ex.getMessage());
+        } catch (IOException ex) {
+            System.out.println("An Error occured while downloading image. " + ex.getMessage());
+        }
+    }
 
 }
