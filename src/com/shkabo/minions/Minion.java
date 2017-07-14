@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import net.coobird.thumbnailator.Thumbnails;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -209,18 +210,26 @@ public class Minion {
         for (Element image : images) {
             System.out.println("processing  image: " + i);
             i++;
-            this.saveImage(image.attr("href"), path, filename + " ("+i+").jpg");
+            this.saveImage(image.attr("href"), path, filename + "-"+i+".jpg");
         }
     }
 
     private void saveImage( String url, String path, String filename) {
         try {
-            InputStream in = new URL( "http:"+url ).openStream();
-            Files.copy(in, Paths.get(path + File.separator + filename));
+//            InputStream in = new URL( "http:"+url ).openStream();
+//            Files.copy(in, Paths.get(path + File.separator + filename));
+//            new File( path + File.separator + "resize" ).mkdirs();
+            Thumbnails.of(new URL( "http:"+url ))
+                    .size(900,720)
+                    .outputQuality(0.5)
+                    .toFile(path + File.separator + filename);
+
         } catch (MalformedURLException ex) {
             System.out.println("Couldn't download image. Wrong or bad url: " + ex.getMessage());
         } catch (IOException ex) {
             System.out.println("An Error occured while downloading image. " + ex.getMessage());
+        } catch (SecurityException se) {
+            System.out.println("An error occured while creating collection item directory: " + se.getMessage());
         }
     }
 
