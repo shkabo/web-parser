@@ -100,16 +100,13 @@ public class Minion {
             this.url = "http://newwalls.as-creation.com" + item.link;
             System.out.println(this.url);
             this.readUrl();
-           //System.out.println(Paths.get(this.collectionName + File.separator + item.title));
-            // let's get items
+
+            // let's get items images, resize and rename them
             this.getItemImages( this.page, this.collectionName + File.separator + item.title, item.title);
+            // get item's metadata
+            this.getItemMetadata( this.page, this.collectionName + File.separator + item.title, item.title );
         }
 
-
-		// make new folder with their name and id
-		// download images in it
-		// optional resize those images
-        //TODO: finish this part of the workflow !
 	}
 
 	/**
@@ -216,21 +213,39 @@ public class Minion {
 
     private void saveImage( String url, String path, String filename) {
         try {
-//            InputStream in = new URL( "http:"+url ).openStream();
-//            Files.copy(in, Paths.get(path + File.separator + filename));
-//            new File( path + File.separator + "resize" ).mkdirs();
-            Thumbnails.of(new URL( "http:"+url ))
-                    .size(900,720)
+            Thumbnails.of(new URL("http:" + url))
+                    .size(900, 720)
                     .outputQuality(0.5)
                     .toFile(path + File.separator + filename);
-
         } catch (MalformedURLException ex) {
-            System.out.println("Couldn't download image. Wrong or bad url: " + ex.getMessage());
+            System.out.println("There was an error downloading image: " + ex.getMessage());
         } catch (IOException ex) {
-            System.out.println("An Error occured while downloading image. " + ex.getMessage());
-        } catch (SecurityException se) {
-            System.out.println("An error occured while creating collection item directory: " + se.getMessage());
+            System.out.println("There was IOException: " + ex.getMessage());
         }
+
+    }
+
+    private void getItemMetadata( String html, String path, String title ) {
+        try {
+
+            Document doc = Jsoup.parse( html);
+            Elements info = doc.select("span.stage-item-title");
+            Elements table = doc.select("div.stage-tab > table.table > tbody > tr");
+
+            PrintWriter writer = new PrintWriter(path + File.separator + info.text() + ".txt");
+            writer.println("<h4>" + title + "</h4>");
+            writer.println("Šifra: " + info.text().split(" ")[1]);
+            // color 4, style 5, size 7
+
+            writer.println("Boja: " + table.get(4).childNode(1).childNode(0).toString());
+            writer.println("Stil: " + table.get(5).childNode(1).childNode(0).toString());
+            writer.println("Materijal: " + table.get(6).childNode(1).childNode(0).toString());
+            writer.println("Dimenzije: " + table.get(7).childNode(1).childNode(0).toString());
+            writer.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("File not found. " + ex.getMessage());
+        }
+
     }
 
 }
