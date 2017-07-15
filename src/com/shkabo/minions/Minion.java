@@ -239,7 +239,7 @@ public class Minion {
 
             writer.println("Boja: " + table.get(4).childNode(1).childNode(0).toString());
             writer.println("Stil: " + table.get(5).childNode(1).childNode(0).toString());
-            writer.println("Materijal: " + table.get(6).childNode(1).childNode(0).toString());
+            writer.println("Materijal: Flis"); //+ table.get(6).childNode(1).childNode(0).toString()
             writer.println("Dimenzije: " + table.get(7).childNode(1).childNode(0).toString());
             writer.close();
         } catch (FileNotFoundException ex) {
