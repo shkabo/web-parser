@@ -42,6 +42,7 @@ public class Minion {
         }
 		// check collection name
 		this.getCollectionName( this.page );
+        System.out.println("Collection: " + this.collectionName);
 
 		// check number of items in collection
         this.getCollectionSize( this.page );
@@ -74,8 +75,7 @@ public class Minion {
             this.getCollectionItems( this.page );
         }
 
-        System.out.println("no items: "+this.collectionSize);
-        System.out.println("items: " + this.collectionItems.size());
+        System.out.println("Number of items: "+this.collectionSize);
         // now that we have everything
 		// wee need to collect each set
         // but first let's create a folder of this collection !
@@ -104,7 +104,7 @@ public class Minion {
             // let's get items images, resize and rename them
             this.getItemImages( this.page, this.collectionName + File.separator + item.title, item.title);
             // get item's metadata
-            this.getItemMetadata( this.page, this.collectionName + File.separator + item.title, item.title );
+            this.getItemMetadata( this.page, this.collectionName + File.separator + item.title, this.collectionName.toUpperCase() );
         }
 
 	}
@@ -170,7 +170,7 @@ public class Minion {
 			name = elem.childNode(0).toString().trim().replace("«","").replace("»","");
 		}
 		this.collectionName = name;
-	}
+    }
 
     /**
      * Get collection items
@@ -232,15 +232,28 @@ public class Minion {
             Elements info = doc.select("span.stage-item-title");
             Elements table = doc.select("div.stage-tab > table.table > tbody > tr");
 
+
             PrintWriter writer = new PrintWriter(path + File.separator + info.text() + ".txt");
             writer.println("<h4>" + title + "</h4>");
-            writer.println("Šifra: " + info.text().split(" ")[1]);
-            // color 4, style 5, size 7
+            writer.println("Šifra: " + info.text().split(" ")[info.text().split(" ").length - 1]);
 
-            writer.println("Boja: " + table.get(4).childNode(1).childNode(0).toString());
-            writer.println("Stil: " + table.get(5).childNode(1).childNode(0).toString());
-            writer.println("Materijal: Flis"); //+ table.get(6).childNode(1).childNode(0).toString()
-            writer.println("Dimenzije: " + table.get(7).childNode(1).childNode(0).toString());
+            for (int i = 0; i < table.size(); i++) {
+                String row = table.get(i).childNode(0).childNode(0).toString();
+                switch (row) {
+                    case "Colour": writer.println("Boja: " + table.get(i).childNode(1).childNode(0).toString());
+                        break;
+                    case "Style": writer.println("Stil: " + table.get(i).childNode(1).childNode(0).toString());
+                        break;
+                    case "Material":  writer.println("Materijal: Flis"); //+ table.get(i).childNode(1).childNode(0).toString()
+                        break;
+                    case "Size": writer.println("Dimenzije: " + table.get(i).childNode(1).childNode(0).toString());
+                        break;
+                    default:
+                        break;
+
+                }
+
+            }
             writer.close();
         } catch (FileNotFoundException ex) {
             System.out.println("File not found. " + ex.getMessage());
