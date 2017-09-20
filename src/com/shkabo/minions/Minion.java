@@ -85,11 +85,14 @@ public class Minion {
             System.out.println("An error occured while creating collection directory: " + se.getMessage());
         }
 
+        // silent counter :)
+        int silent_counter = 1;
+
         // now we visit each item, create it's folder, download images !
         // main image should be 900x720
         // other images should be width 900px, height corresponding to width
         for ( TapetItem item : this.collectionItems ) {
-            System.out.println("Getting item: " + item.title );
+            System.out.println("Getting item"+ silent_counter + "/"+ this.collectionSize +" : " + this.collectionName + " - " + item.title );
 
             try {
                new File( this.collectionName + File.separator + item.title ).mkdirs();
@@ -105,6 +108,10 @@ public class Minion {
             this.getItemImages( this.page, this.collectionName + File.separator + item.title, item.title);
             // get item's metadata
             this.getItemMetadata( this.page, this.collectionName + File.separator + item.title, this.collectionName.toUpperCase() );
+
+            // silent counter check
+            silent_counter = (silent_counter == this.collectionSize) ? 0 : silent_counter + 1;
+
         }
 
 	}
@@ -205,7 +212,7 @@ public class Minion {
         Elements images = doc.select("div.thumbBarInner > a[href]");
         int i = 0;
         for (Element image : images) {
-            System.out.println("processing  image: " + i);
+            System.out.println("processing  image: " + i + 1);
             i++;
             this.saveImage(image.attr("href"), path, filename + "-"+i+".jpg");
         }
