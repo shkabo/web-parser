@@ -1,35 +1,34 @@
 package com.shkabo.minions;
 
-import java.awt.*;
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import net.coobird.thumbnailator.Thumbnails;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import javax.imageio.ImageIO;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Minion {
 
 	private String url;
-	private String protocol;
 	private Integer collectionSize = 0;
 	private List<TapetItem> collectionItems = new ArrayList<>();
 	private String collectionName;
 	private String page;
 	private int numPages = 0;
 	private ArrayList<String> collectionPages = new ArrayList<>();
+	private String folder_prefix = "uploads" + File.separator;
+	private String collection_path;
+
 
 	// constructor and set url and port to work with
 	public Minion(String url) {
@@ -79,11 +78,16 @@ public class Minion {
         // now that we have everything
 		// wee need to collect each set
         // but first let's create a folder of this collection !
+
         try {
-            new File( this.collectionName ).mkdirs();
+            this.collection_path = this.folder_prefix + this.toPrettyURL(this.collectionName);
+            new File( this.collection_path ).mkdirs();
         } catch (SecurityException se) {
             System.out.println("An error occured while creating collection directory: " + se.getMessage());
         }
+
+        // get collection main image !
+        this.getCollectionImage(this.page, this.collection_path, this.toPrettyURL(this.collectionName));
 
         // silent counter :)
         int silent_counter = 1;
@@ -92,10 +96,10 @@ public class Minion {
         // main image should be 900x720
         // other images should be width 900px, height corresponding to width
         for ( TapetItem item : this.collectionItems ) {
-            System.out.println("Getting item"+ silent_counter + "/"+ this.collectionSize +" : " + this.collectionName + " - " + item.title );
+            System.out.println("Getting item " + silent_counter + "/"+ this.collectionSize +" : " + this.collectionName + " - " + item.title );
 
             try {
-               new File( this.collectionName + File.separator + item.title ).mkdirs();
+               new File( this.collection_path + File.separator + this.toPrettyURL(item.title) ).mkdirs();
             } catch (SecurityException se) {
                 System.out.println("An error occured while creating collection item directory: " + se.getMessage());
             }
@@ -105,9 +109,9 @@ public class Minion {
             this.readUrl();
 
             // let's get items images, resize and rename them
-            this.getItemImages( this.page, this.collectionName + File.separator + item.title, item.title);
+            this.getItemImages( this.page, this.collection_path + File.separator + this.toPrettyURL(item.title), this.toPrettyURL(item.title));
             // get item's metadata
-            this.getItemMetadata( this.page, this.collectionName + File.separator + item.title, this.collectionName.toUpperCase() );
+            this.getItemMetadata( this.page, this.collection_path + File.separator + this.toPrettyURL(item.title), this.collectionName.toUpperCase() );
 
             // silent counter check
             silent_counter = (silent_counter == this.collectionSize) ? 0 : silent_counter + 1;
@@ -129,9 +133,7 @@ public class Minion {
 			URLConnection address = new URL( this.url ).openConnection();
 			address.setRequestProperty("User-Agent",
 					"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-			// set protocol
-			this.protocol = address.getURL().getProtocol();
-			
+
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader(address.getInputStream(), Charset.forName("UTF-8")));
 
@@ -207,17 +209,62 @@ public class Minion {
         }
     }
 
+    /**
+     * Collect all images for the category item and save them
+     * @param html
+     * @param path
+     * @param filename
+     */
     private void getItemImages(String html, String path, String filename) {
         Document doc = Jsoup.parse(html);
         Elements images = doc.select("div.thumbBarInner > a[href]");
         int i = 0;
         for (Element image : images) {
-            System.out.println("processing  image: " + i + 1);
             i++;
+            System.out.println("processing  image: " + i);
             this.saveImage(image.attr("href"), path, filename + "-"+i+".jpg");
         }
     }
 
+    /**
+     * Get link of the collection promo image
+     * @param html
+     * @param path
+     * @param filename
+     */
+    private void getCollectionImage(String html, String path, String filename) {
+        Document doc = Jsoup.parse(html);
+        Elements image = doc.select("div.thumbnail.hidden-xs > img");
+        for (Element promoImage : image) {
+            this.saveCollectionImage(promoImage.attr("src"), path, filename + ".jpg");
+        }
+    }
+
+    /**
+     * Save collection promo image and resize it to 500x550
+     * @param url
+     * @param path
+     * @param filename
+     */
+    private void saveCollectionImage( String url, String path, String filename) {
+        try {
+            Thumbnails.of(new URL("http:" + url))
+                    .forceSize(500,550) // I really don't know why ?? should be 360x396 but who am I to be asked for this lol
+                    .outputQuality(0.5)
+                    .toFile(path + File.separator + filename);
+        } catch (MalformedURLException ex)  {
+            System.out.println("There was an error downloading Catalog image: " + ex.getMessage());
+        } catch (IOException ex) {
+            System.out.println("There was an IO exception: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Save and resize image to the filesystem
+     * @param url
+     * @param path
+     * @param filename
+     */
     private void saveImage( String url, String path, String filename) {
         try {
             Thumbnails.of(new URL("http:" + url))
@@ -232,6 +279,12 @@ public class Minion {
 
     }
 
+    /**
+     * Get item description properties
+     * @param html
+     * @param path
+     * @param title
+     */
     private void getItemMetadata( String html, String path, String title ) {
         try {
 
@@ -266,6 +319,18 @@ public class Minion {
             System.out.println("File not found. " + ex.getMessage());
         }
 
+    }
+
+    /**
+     * Convert string to SEO friendly slug url
+     * Idea is to have SEO friendly folders/images in the upload folder
+     * @param string
+     * @return
+     */
+    private String toPrettyURL(String string) {
+        return Normalizer.normalize(string.toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .replaceAll("[^\\p{Alnum}]+", "-");
     }
 
 }
