@@ -20,7 +20,6 @@ import java.util.Set;
 public class Minion {
 
 	private String url;
-	private String protocol;
 	private Integer collectionSize = 0;
 	private List<TapetItem> collectionItems = new ArrayList<>();
 	private String collectionName;
@@ -134,9 +133,7 @@ public class Minion {
 			URLConnection address = new URL( this.url ).openConnection();
 			address.setRequestProperty("User-Agent",
 					"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-			// set protocol
-			this.protocol = address.getURL().getProtocol();
-			
+						
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader(address.getInputStream(), Charset.forName("UTF-8")));
 
@@ -229,7 +226,7 @@ public class Minion {
         }
     }
 
-    
+
     private void getCollectionImage(String html, String path, String filename) {
         Document doc = Jsoup.parse(html);
         Elements image = doc.select("div.thumbnail.hidden-xs > img");
