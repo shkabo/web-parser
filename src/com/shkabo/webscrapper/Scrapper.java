@@ -12,7 +12,6 @@ public class Scrapper {
 				"http://newwalls.as-creation.com/en/collections/371700.html", //graze - 12 items
 //                "http://newwalls.as-creation.com/en/collections/371800.html", //april
 //                "http://newwalls.as-creation.com/en/collections/363700.html", //chateau 5
-
 		};
 
 		for(String link : links) {

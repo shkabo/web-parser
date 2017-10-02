@@ -133,7 +133,7 @@ public class Minion {
 			URLConnection address = new URL( this.url ).openConnection();
 			address.setRequestProperty("User-Agent",
 					"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-						
+
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader(address.getInputStream(), Charset.forName("UTF-8")));
 
@@ -226,7 +226,12 @@ public class Minion {
         }
     }
 
-
+    /**
+     * Get link of the collection promo image
+     * @param html
+     * @param path
+     * @param filename
+     */
     private void getCollectionImage(String html, String path, String filename) {
         Document doc = Jsoup.parse(html);
         Elements image = doc.select("div.thumbnail.hidden-xs > img");
@@ -235,10 +240,16 @@ public class Minion {
         }
     }
 
+    /**
+     * Save collection promo image and resize it to 500x550
+     * @param url
+     * @param path
+     * @param filename
+     */
     private void saveCollectionImage( String url, String path, String filename) {
         try {
             Thumbnails.of(new URL("http:" + url))
-                    .forceSize(500,550)
+                    .forceSize(500,550) // I really don't know why ?? should be 360x396 but who am I to be asked for this lol
                     .outputQuality(0.5)
                     .toFile(path + File.separator + filename);
         } catch (MalformedURLException ex)  {
