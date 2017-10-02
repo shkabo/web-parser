@@ -229,6 +229,7 @@ public class Minion {
         }
     }
 
+    
     private void getCollectionImage(String html, String path, String filename) {
         Document doc = Jsoup.parse(html);
         Elements image = doc.select("div.thumbnail.hidden-xs > img");
