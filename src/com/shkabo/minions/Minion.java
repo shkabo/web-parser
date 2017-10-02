@@ -87,6 +87,9 @@ public class Minion {
             System.out.println("An error occured while creating collection directory: " + se.getMessage());
         }
 
+        // get collection main image !
+        this.getCollectionImage(this.page, this.collection_path, this.toPrettyURL(this.collectionName));
+
         // silent counter :)
         int silent_counter = 1;
 
@@ -223,6 +226,27 @@ public class Minion {
             i++;
             System.out.println("processing  image: " + i);
             this.saveImage(image.attr("href"), path, filename + "-"+i+".jpg");
+        }
+    }
+
+    private void getCollectionImage(String html, String path, String filename) {
+        Document doc = Jsoup.parse(html);
+        Elements image = doc.select("div.thumbnail.hidden-xs > img");
+        for (Element promoImage : image) {
+            this.saveCollectionImage(promoImage.attr("src"), path, filename + ".jpg");
+        }
+    }
+
+    private void saveCollectionImage( String url, String path, String filename) {
+        try {
+            Thumbnails.of(new URL("http:" + url))
+                    .forceSize(500,550)
+                    .outputQuality(0.5)
+                    .toFile(path + File.separator + filename);
+        } catch (MalformedURLException ex)  {
+            System.out.println("There was an error downloading Catalog image: " + ex.getMessage());
+        } catch (IOException ex) {
+            System.out.println("There was an IO exception: " + ex.getMessage());
         }
     }
 
